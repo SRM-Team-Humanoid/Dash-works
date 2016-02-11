@@ -11,7 +11,7 @@ from readchar import readchar
 import rospy
 from std_msgs.msg import String
 
-path = "/home/warr/cdatkin_ws/src/humanoid/scripts/"
+path = "/home/odroid/catkin_ws/src/humanoid/scripts/"
 
 class Dxl(object):
     def __init__(self,port_id=0, scan_limit=25, lock=-1):

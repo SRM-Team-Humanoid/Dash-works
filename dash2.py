@@ -4,11 +4,11 @@ import time
 import numpy as np
 import rospy
 from std_msgs.msg import String
-
+from threading import Thread
 def cvis():
     msg = "standby"
     global msg
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     width, height, zoom = cap.get(3),cap.get(4),cap.get(5)
     print width, height, zoom
     #cap.set(5,30)
@@ -138,9 +138,10 @@ msg = "standby"
 def vision_pub():
     pub = rospy.Publisher('vision_data', String, queue_size=1)
     rospy.init_node('Vision', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
+    rate = rospy.Rate(100) # 10hz
+    t = Thread(target=cvis)
+    t.start()
     while not rospy.is_shutdown():
-        cvis()
         print msg
         pub.publish(msg)
         rate.sleep()
