@@ -6,6 +6,7 @@ import rospy
 from std_msgs.msg import String
 
 def cvis():
+    msg = "standby"
     global msg
     cap = cv2.VideoCapture(1)
     width, height, zoom = cap.get(3),cap.get(4),cap.get(5)
@@ -76,6 +77,7 @@ def cvis():
                 contours2.append(c2)
         if (len(contours) == 0) or (len(contours2) == 0):
             # cv2.imshow("c", f)
+            msg = "standby"
             return
             # if cv2.waitKey(25) == 27:
             #     break
@@ -106,14 +108,12 @@ def cvis():
         centerx = (contourCenter[minContour][0]+contourCenter2[minContour2][0])/2
         center = width/2
         if centerx > (center + sides):
-            msg = "right"
-            print "right"
-        elif centerx < (center - sides):
             msg = "left"
-            print "left"
+        elif centerx < (center - sides):
+            msg = "right"
+
         else:
             msg = "center"
-            print "center"
     # if contourDisplay != None:
     #     x, y, w, h = cv2.boundingRect(contourDisplay)
     #     cx, cy = x + w / 2, y + h / 2
@@ -133,7 +133,7 @@ def cvis():
     # cv2.imshow("c",f)
     cv2.waitKey(1)
 
-msg = "Standby"
+msg = "standby"
 
 def vision_pub():
     pub = rospy.Publisher('vision_data', String, queue_size=1)
@@ -141,6 +141,7 @@ def vision_pub():
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         cvis()
+        print msg
         pub.publish(msg)
         rate.sleep()
 

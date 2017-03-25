@@ -224,26 +224,34 @@ def callback(data):
     # rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
     dir = data.data
     if dir=='center':
-        print "Boom Walk!"
+        rospy.loginfo("Boom Walk!")
         boom_walk.execute()
     elif dir=='right':
         r_turn.execute()
-        print "r_turn"
+        rospy.loginfo("r_turn")
+
     elif dir=='left':
         l_turn.execute()
-        print "l_turn"
+        rospy.loginfo("l_turn")
+
     else:
         balance.execute()
-        print "balance"
+        rospy.loginfo("balance")
+
 
 
 if __name__=='__main__':
-    # dxl = Dxl(lock=20)
-    # state = dxl.getPos()
-    # print state
-    # raw_input("Proceed?")
-    # balance.execute()
+    dxl = Dxl(lock=20)
+    state = dxl.getPos()
+    print state
+    raw_input("Proceed?")
+    balance.execute()
     # raw_input("Sure?")
+    # boom_walk.execute()
+    # raw_input("Pakka?")
+    # l_turn.execute()
+    # raw_input("Soch Le")
+    # r_turn.execute()
     rospy.init_node('vision_rec', anonymous=True)
     rospy.Subscriber('vision_data', String, callback)
     rospy.spin()
