@@ -1,26 +1,18 @@
 import cv2
 import time
 import numpy as np
-#import serial
-#ser = serial.Serial("COM5",9600)
-#prev = 0
-#cxg,cyg,cxo,cyo = 0,0,0,0
-'''cap = cv2.VideoCapture(2)
-w,h,z = cap.get(3),cap.get(4),cap.get(5)
-print w,h,z
-#cap.set(5,30)
-green1 = np.array([60,100,100])
-green2 = np.array([80,255,255])
-red1=np.array([0,100,100])
-red2=np.array([7,255,255])'''
+
 def cvis():
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(1)
     width, height, zoom = cap.get(3),cap.get(4),cap.get(5)
     print width, height, zoom
     #cap.set(5,30)
     sides = 150
     g1,g2 = 60,80
     r1,r2 = 90,130
+    compare = 2
+    maxSize = 500
+    dist_thresh = 200
     green1 = np.array([g1,100,100])
     green2 = np.array([g2,255,255])
     red1=np.array([r1,120,100])
@@ -57,8 +49,7 @@ def cvis():
         else:
             contoursSorted = sorted(contours, key=cv2.contourArea , reverse=True)
             contoursSorted2 = sorted(contours2, key=cv2.contourArea, reverse=True)
-            compare = 2
-            maxSize = 500
+
             if len(contoursSorted) > compare:
                 contoursSorted = contoursSorted[:compare]
             if len(contoursSorted2) > compare:
@@ -97,15 +88,20 @@ def cvis():
                         minDis = dis
                         minContour = i
                         minContour2 = j
+            if minDis > dist_thresh:
+                cv2.imshow("c", f)
+                if cv2.waitKey(25) == 27:
+                    break
+                continue
+
             contourDisplay = contours[minContour]
             contourDisplay2 = contours2[minContour2]
             centerx = (contourCenter[minContour][0]+contourCenter2[minContour2][0])/2
-            sides = 150
             center = width/2
             if centerx > (center + sides):
-                print "left"
-            elif centerx < (center - sides):
                 print "right"
+            elif centerx < (center - sides):
+                print "left"
             else:
                 print "center"
         if contourDisplay != None:

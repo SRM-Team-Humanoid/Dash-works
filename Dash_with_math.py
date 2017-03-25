@@ -14,7 +14,7 @@ green2 = np.array([80,255,255])
 red1=np.array([0,100,100])
 red2=np.array([7,255,255])'''
 def cvis():
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(1)
     w,h,z = cap.get(3),cap.get(4),cap.get(5)
     print w,h,z
     #cap.set(5,30)
