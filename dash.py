@@ -15,18 +15,20 @@ red1=np.array([0,100,100])
 red2=np.array([7,255,255])'''
 def cvis():
     cap = cv2.VideoCapture(2)
-    w,h,z = cap.get(3),cap.get(4),cap.get(5)
-    print w,h,z
+    width, height, zoom = cap.get(3),cap.get(4),cap.get(5)
+    print width, height, zoom
     #cap.set(5,30)
-    #g1,g2 = 60,80
-    #r1,r2 = 190,200
-    green1 = np.array([60,100,100])
-    green2 = np.array([80,255,255])
-    red1=np.array([30,120,100])
-    red2=np.array([45,255,255])
+    sides = 150
+    g1,g2 = 60,80
+    r1,r2 = 90,130
+    green1 = np.array([g1,100,100])
+    green2 = np.array([g2,255,255])
+    red1=np.array([r1,120,100])
+    red2=np.array([r2,255,255])
     while(1):
 
         _,f = cap.read()
+        cv2.circle(f,(int(width/2),int(height/2)),5,(0,0,255),-1)
         f = cv2.flip(f,1)
         blur = cv2.medianBlur(f,7)
         hsv = cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
@@ -40,24 +42,87 @@ def cvis():
 
         im2,contours2,hierarchy2 = cv2.findContours(dilate_outer,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
         im,contours,hierarchy = cv2.findContours(dilate,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
-        if len(contours) > 0:
-            c = max(contours, key=cv2.contourArea)
-            x, y, w, h = cv2.boundingRect(c)
-            cx, cy = x + w / 2, y + h / 2
-            if 30 < hsv.item(cy,cx,0) < 45:
-                cv2.rectangle(f,(x,y),(x+w,y+h),[0,0,255],2)
-                cxo, cyo = x + w / 2, y + h / 2
-                cv2.circle(f, (cxo, cyo), 5, (0,0,0), -1)
-            cx, cy = x + w / 2, y + h / 2
 
-        if len(contours2):
-            c2 = max(contours2,key = cv2.contourArea)
-            x1, y1, w1, h1 = cv2.boundingRect(c2)
+        if len(contours) + len(contours2) == 0:
+            cv2.imshow("c",f)
+            if cv2.waitKey(25) == 27:
+                break
+            continue
+        if len(contours) == 0:
+            contourDisplay = None
+            contourDisplay2 = max(contours2, key=cv2.contourArea)
+        elif len(contours2) == 0:
+            contourDisplay2 = None
+            contourDisplay = max(contours, key=cv2.contourArea)
+        else:
+            contoursSorted = sorted(contours, key=cv2.contourArea , reverse=True)
+            contoursSorted2 = sorted(contours2, key=cv2.contourArea, reverse=True)
+            compare = 2
+            maxSize = 500
+            if len(contoursSorted) > compare:
+                contoursSorted = contoursSorted[:compare]
+            if len(contoursSorted2) > compare:
+                contoursSorted2 = contoursSorted2[:compare]
+            contourCenter = []
+            contourCenter2 = []
+            contours = []
+            contours2 = []
+            for c in contoursSorted:
+                x, y, w, h = cv2.boundingRect(c)
+                cxo, cyo = x + w / 2, y + h / 2
+                if cv2.contourArea(c) > maxSize:
+                    contourCenter.append([cxo, cyo])
+                    contours.append(c)
+            for c2 in contoursSorted2:
+                x, y, w, h = cv2.boundingRect(c2)
+                cxo, cyo = x + w / 2, y + h / 2
+                if cv2.contourArea(c2) > maxSize:
+                    contourCenter2.append([cxo, cyo])
+                    contours2.append(c2)
+            if (len(contours) == 0) or (len(contours2) == 0):
+                cv2.imshow("c", f)
+                if cv2.waitKey(25) == 27:
+                    break
+                continue
+            minDis = 10000000
+            minContour = 0
+            minContour2 = 0
+
+            for i in range(0, len(contourCenter)):
+                c = contourCenter[i]
+                for j in range(0, len(contourCenter2)):
+                    c2 = contourCenter2[j]
+                    dis = pow(pow(c[0] - c2[0], 2) + pow(c[1] - c2[1], 2), 0.5)
+                    if dis < minDis:
+                        minDis = dis
+                        minContour = i
+                        minContour2 = j
+            contourDisplay = contours[minContour]
+            contourDisplay2 = contours2[minContour2]
+            centerx = (contourCenter[minContour][0]+contourCenter2[minContour2][0])/2
+            sides = 150
+            center = width/2
+            if centerx > (center + sides):
+                print "left"
+            elif centerx < (center - sides):
+                print "right"
+            else:
+                print "center"
+        if contourDisplay != None:
+            x, y, w, h = cv2.boundingRect(contourDisplay)
+            cx, cy = x + w / 2, y + h / 2
+            if r1 < hsv.item(cy, cx, 0) < r2:
+                cv2.rectangle(f, (x, y), (x + w, y + h), [0, 0, 255], 2)
+                cxo, cyo = x + w / 2, y + h / 2
+                cv2.circle(f, (cxo, cyo), 5, (0, 0, 0), -1)
+            cx, cy = x + w / 2, y + h / 2
+        if contourDisplay2 != None:
+            x1, y1, w1, h1 = cv2.boundingRect(contourDisplay2)
             cx1, cy1 = x1 + w1 / 2, y1 + h1 / 2
-            if 60 < hsv.item(cy1,cx1,0) < 90:
-                cv2.rectangle(f,(x1,y1),(x1+w1,y1+h1),[0,255,],2)
+            if g1 < hsv.item(cy1, cx1, 0) < g2:
+                cv2.rectangle(f, (x1, y1), (x1+w1, y1+h1), [0, 255, ], 2)
                 cxo1, cyo1 = x1 + w1 / 2, y1 + h1 / 2
-                cv2.circle(f, (cxo1, cyo1), 5, (0,0,0), -1)
+                cv2.circle(f, (cxo1, cyo1), 5, (0, 0, 0), -1)
             cx1, cy1 = x1 + w1 / 2, y1 + h1 / 2
         cv2.imshow("c",f)
         if cv2.waitKey(25) == 27:
