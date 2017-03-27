@@ -2,15 +2,19 @@
 import cv2
 import time
 import numpy as np
-import rospy
-from std_msgs.msg import String
+#import rospy
+#from std_msgs.msg import String
 from threading import Thread
+
+cap = cv2.VideoCapture(1)
+count = 0
+move = 0
 def cvis():
-    msg = "standby"
+    #msg = "standby"
     global msg
-    cap = cv2.VideoCapture(0)
-    width, height, zoom = cap.get(3),cap.get(4),cap.get(5)
-    print width, height, zoom
+    global count,move
+    width, height= cap.get(3),cap.get(4)
+    #print width, height
     #cap.set(5,30)
     sides = 150
     g1,g2 = 60,80
@@ -35,10 +39,11 @@ def cvis():
     erode = cv2.erode(mask_outer,None,iterations = 1)
     dilate_outer = cv2.dilate(erode,None,iterations = 10)
 
+    contours2,hierarchy2 = cv2.findContours(dilate_outer,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    contours,hierarchy = cv2.findContours(dilate,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    #print "Dikhega"
 
-    im2,contours2,hierarchy2 = cv2.findContours(dilate_outer,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
-    im,contours,hierarchy = cv2.findContours(dilate,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
-
+    #cv2.imshow("C",f)
     if len(contours) + len(contours2) == 0:
         # cv2.imshow("c",f)
         return
@@ -102,39 +107,55 @@ def cvis():
             # if cv2.waitKey(25) == 27:
             #     break
             #  continue
-
+        if len(contours)>0 and len(contours2)>0:
+            if cv2.contourArea(contours[minContour]) > 40000 or cv2.contourArea(contours2[minContour2]) > 40000 :
+                if count == 4:
+		    move = 1
+		count+=1
         contourDisplay = contours[minContour]
         contourDisplay2 = contours2[minContour2]
         centerx = (contourCenter[minContour][0]+contourCenter2[minContour2][0])/2
         center = width/2
-        if centerx > (center + sides):
+        if centerx > (center + sides) and move == 1:
+            msg = "right"
+        elif centerx < (center - sides) and move ==1:
             msg = "left"
-        elif centerx < (center - sides):
+
+        elif move==1:
+            msg = "back"
+	
+        elif centerx > (center + sides) and move ==0:
+            msg = "left"
+        elif centerx < (center - sides) and move ==0:
             msg = "right"
 
-        else:
-            msg = "center"
-    # if contourDisplay != None:
-    #     x, y, w, h = cv2.boundingRect(contourDisplay)
-    #     cx, cy = x + w / 2, y + h / 2
-    #     if r1 < hsv.item(cy, cx, 0) < r2:
-    #         cv2.rectangle(f, (x, y), (x + w, y + h), [0, 0, 255], 2)
-    #         cxo, cyo = x + w / 2, y + h / 2
-    #         cv2.circle(f, (cxo, cyo), 5, (0, 0, 0), -1)
-    #     cx, cy = x + w / 2, y + h / 2
-    # if contourDisplay2 != None:
-    #     x1, y1, w1, h1 = cv2.boundingRect(contourDisplay2)
-    #     cx1, cy1 = x1 + w1 / 2, y1 + h1 / 2
-    #     if g1 < hsv.item(cy1, cx1, 0) < g2:
-    #         cv2.rectangle(f, (x1, y1), (x1+w1, y1+h1), [0, 255, ], 2)
-    #         cxo1, cyo1 = x1 + w1 / 2, y1 + h1 / 2
-    #         cv2.circle(f, (cxo1, cyo1), 5, (0, 0, 0), -1)
-    #     cx1, cy1 = x1 + w1 / 2, y1 + h1 / 2
-    # cv2.imshow("c",f)
+        elif move==0:
+            msg = "front"
+    if contourDisplay != None:
+         x, y, w, h = cv2.boundingRect(contourDisplay)
+         cx, cy = x + w / 2, y + h / 2
+         if r1 < hsv.item(cy, cx, 0) < r2:
+             cv2.rectangle(f, (x, y), (x + w, y + h), [0, 0, 255], 2)
+             cxo, cyo = x + w / 2, y + h / 2
+             cv2.circle(f, (cxo, cyo), 5, (0, 0, 0), -1)
+         cx, cy = x + w / 2, y + h / 2
+    if contourDisplay2 != None:
+         x1, y1, w1, h1 = cv2.boundingRect(contourDisplay2)
+         cx1, cy1 = x1 + w1 / 2, y1 + h1 / 2
+         if g1 < hsv.item(cy1, cx1, 0) < g2:
+             cv2.rectangle(f, (x1, y1), (x1+w1, y1+h1), [0, 255, ], 2)
+             cxo1, cyo1 = x1 + w1 / 2, y1 + h1 / 2
+             cv2.circle(f, (cxo1, cyo1), 5, (0, 0, 0), -1)
+         cx1, cy1 = x1 + w1 / 2, y1 + h1 / 2
+    cv2.imshow("c",f)
+    print "Bhai chal raha h"
     cv2.waitKey(1)
 
 msg = "standby"
-
+while True:
+    cvis()
+    print msg
+'''
 def vision_pub():
     pub = rospy.Publisher('vision_data', String, queue_size=1)
     rospy.init_node('Vision', anonymous=True)
@@ -153,4 +174,4 @@ if __name__ == '__main__':
         cv2.destroyAllWindows()
         cap.release()
         pass
-
+'''
